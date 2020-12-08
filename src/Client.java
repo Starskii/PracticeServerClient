@@ -8,6 +8,9 @@ import java.util.Scanner;
 
 public class Client {
 
+    Gamestate g;
+    int ID;
+
     public static int generateID(){
         ZonedDateTime nowZoned = ZonedDateTime.now();
         Instant midnight = nowZoned.toLocalDate().atStartOfDay(nowZoned.getZone()).toInstant();
@@ -16,54 +19,63 @@ public class Client {
         return (int) (seconds%(65535-4999))+4999;
     }
 
-    public static void main(String[] args) throws IOException{
-        int ID = generateID();
+    public void sendData() throws IOException {
+        this.ID = generateID();
         System.out.println(ID);
         Socket sendingSocket = new Socket("localhost", 4999);
-        Socket receivingSocket;
         OutputStream os;
-        InputStream is;
         BufferedOutputStream bos;
-        BufferedInputStream bis;
         ObjectOutputStream oos;
-        ObjectInputStream ois;
 
         //Example Object
-        Gamestate g = new Gamestate(ID, "Hello World!");
+        this.g = new Gamestate(ID, "Hello World!");
 
         Scanner clientInputGetter = new Scanner(System.in);
 
-        String message = g.message;
+        String message = this.g.message;
         while(!message.equals("exit")){
-            g.message = message;
+            this.g.message = message;
             os = sendingSocket.getOutputStream();
             bos = new BufferedOutputStream(os);
             oos = new ObjectOutputStream(bos);
-            oos.writeObject(g);
+            oos.writeObject(this.g);
 
             oos.flush();
 
             //Get gamestate back from server
-            boolean listening = true;
-            while(listening){
-                ServerSocket clientListening = new ServerSocket(ID);
-                receivingSocket = clientListening.accept();
-                is = receivingSocket.getInputStream();
-                bis = new BufferedInputStream(is);
-                ois = new ObjectInputStream(bis);
-                try {
-                    g = (Gamestate) ois.readObject();
-                    listening = false;
-                } catch (ClassNotFoundException e) {
-                    System.out.println("Received incompatible Object Type from Server");
-                }
-                ois.close();
-                bis.close();
-                is.close();
-                System.out.println(g.message);
-            }
+            receiveData();
             message = clientInputGetter.next();
         }
         sendingSocket.close();
+    }
+
+    public void receiveData() throws IOException {
+        Socket receivingSocket;
+        InputStream is;
+        BufferedInputStream bis;
+        ObjectInputStream ois;
+        boolean listening = true;
+        while(listening){
+            ServerSocket clientListening = new ServerSocket(this.ID);
+            receivingSocket = clientListening.accept();
+            is = receivingSocket.getInputStream();
+            bis = new BufferedInputStream(is);
+            ois = new ObjectInputStream(bis);
+            try {
+                this.g = (Gamestate) ois.readObject();
+                listening = false;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Received incompatible Object Type from Server");
+            }
+            ois.close();
+            bis.close();
+            is.close();
+            System.out.println(g.message);
+        }
+    }
+
+    public static void main(String[] args) throws IOException{
+        Client client = new Client();
+        client.sendData();
     }
 }
