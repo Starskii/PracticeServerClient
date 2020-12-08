@@ -44,7 +44,9 @@ public class Client {
 
             //Get gamestate back from server
             receiveData();
-            message = clientInputGetter.next();
+            if(g.playerNumber == this.ID) {
+                message = clientInputGetter.next();
+            }
         }
         sendingSocket.close();
     }
@@ -70,6 +72,7 @@ public class Client {
             ois.close();
             bis.close();
             is.close();
+            clientListening.close();
             System.out.println(g.message);
         }
     }

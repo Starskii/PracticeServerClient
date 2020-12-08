@@ -10,13 +10,16 @@ public class Server extends Thread{
     boolean newUser;
     boolean userConnected;
     int userNumber;
-    int port;
+    Gamestate g;
+    int currentPlayer;
 
     public Server(Socket connectionSocket){
         this.connectionSocket = connectionSocket;
         userList = new LinkedList<>();
+        g = new Gamestate(0, "");
         this.newUser = true;
         userConnected = true;
+        currentPlayer = 0;
     }
 
     public void run(){
@@ -43,14 +46,44 @@ public class Server extends Thread{
         }
     }
 
+    private void updatePlayersGamestate(Gamestate g) throws IOException {
+        for(Integer playerID : userList){
+            try {
+                Socket dataSocket = new Socket(connectionSocket.getInetAddress(), playerID);
+                OutputStream os = dataSocket.getOutputStream();
+                BufferedOutputStream bos = new BufferedOutputStream(os);
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(g);
+                oos.close();
+                bos.close();
+                os.close();
+                dataSocket.close();
+            }catch(Exception e){
+                System.out.println("Player " + playerID + " not listening to server.");
+            }
+        }
+    }
+
+    private void updateGameState(Gamestate g){
+        if(userList.size() < 4){
+            this.g = new Gamestate(0, g.message);
+        }else{
+            currentPlayer = userList.get(0);
+            this.g = new Gamestate(currentPlayer, g.message);
+        }
+    }
+
     private int processRequest() throws IOException, ClassNotFoundException{
         InputStream is = connectionSocket.getInputStream();
         BufferedInputStream bis = new BufferedInputStream(is);
         ObjectInputStream ois;
         ois = new ObjectInputStream(bis);
         Gamestate g = (Gamestate) ois.readObject();
+        updateGameState(g);
         if(!userList.contains(g.playerNumber))
             userList.add(g.playerNumber);
+
+        updatePlayersGamestate(g);
         if(g.message.equals("exit")) {
             userList.remove(g.playerNumber);
             return 1;
