@@ -5,9 +5,9 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) throws IOException{
         Socket s = new Socket("localhost", 4999);
-        OutputStream os = s.getOutputStream();
-        BufferedOutputStream bos = new BufferedOutputStream(os);
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        OutputStream os;
+        BufferedOutputStream bos;
+        ObjectOutputStream oos;
 
         //Example Object
         Gamestate g = new Gamestate(1, "Hello World!");
@@ -25,7 +25,7 @@ public class Client {
             oos.flush();
 
             message = clientInputGetter.next();
-
         }
+        s.close();
     }
 }

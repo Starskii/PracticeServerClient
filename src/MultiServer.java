@@ -5,12 +5,12 @@ public class MultiServer {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         boolean listening = true;
-        Server w ;
+        Server w;
 
         try {
             serverSocket = new ServerSocket(4999);
         } catch (IOException e) {
-            System.err.println("Could not listen on port: 1200.");
+            System.err.println("Could not listen on port: 4999.");
             System.exit(-1);
         }
 
