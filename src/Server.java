@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -16,24 +17,27 @@ public class Server extends Thread{
     }
 
     public void run(){
-        if(newUser){
-            userCount++;
-            System.out.println("User " + userCount + " has joined.");
-            newUser = false;
-        }
-        try {
-            processRequest();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        while(true) {
+            if (newUser) {
+                userCount++;
+                System.out.println("User " + userCount + " has joined.");
+                newUser = false;
+            }
+            try {
+                processRequest();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void processRequest() throws IOException, ClassNotFoundException{
         InputStream is = connectionSocket.getInputStream();
-        ObjectInputStream ois = new ObjectInputStream(is);
+        BufferedInputStream bis = new BufferedInputStream(is);
+        ObjectInputStream ois = new ObjectInputStream(bis);
         Gamestate g = (Gamestate) ois.readObject();
         System.out.println(g.playerNumber + ": " + g.message);
-    }
+     }
 }
