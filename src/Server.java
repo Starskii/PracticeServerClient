@@ -2,11 +2,14 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server extends Thread{
     private Socket connectionSocket;
     private static int userCount = 0;
+    private int currentTurn = -1;
     boolean newUser;
     boolean userConnected;
     int userNumber;
@@ -67,10 +70,12 @@ public class Server extends Thread{
     }
 
     private void updateGameState(Gamestate g){
-        if(userList.size() < 4){
+        if(userList.size() <= 3){
             this.g = new Gamestate(0, g.message);
         }else{
-            currentPlayer = userList.get(0);
+            if(currentTurn >= 4)
+                currentTurn = 0;
+            currentPlayer = userList.get(currentTurn);
             this.g = new Gamestate(currentPlayer, g.message);
         }
     }
@@ -81,16 +86,21 @@ public class Server extends Thread{
         ObjectInputStream ois;
         ois = new ObjectInputStream(bis);
         Gamestate g = (Gamestate) ois.readObject();
+        if(!userList.values().contains(g.playerNumber))
+            userList.put(userList.size(), g.playerNumber);
+        if(userList.size() == 4)
+            incrementTurn();
         updateGameState(g);
-        if(!userList.contains(g.playerNumber))
-            userList.put(g.playerNumber, g.playerNumber);
-
-        updatePlayersGamestate(g);
+        updatePlayersGamestate(this.g);
         if(g.message.equals("exit")) {
             userList.remove(g.playerNumber);
             return 1;
         }
         System.out.println(g.playerNumber + ": " + g.message);
         return 0;
+     }
+
+     private synchronized void incrementTurn(){
+        currentTurn++;
      }
 }

@@ -33,7 +33,6 @@ public class Client {
         Scanner clientInputGetter = new Scanner(System.in);
 
         String message = this.g.message;
-        boolean firstPass = true;
 
         this.g.message = message;
         os = sendingSocket.getOutputStream();
@@ -46,8 +45,6 @@ public class Client {
         while(!message.equals("exit")){
             //Get gamestate back from server
             receiveData();
-            System.out.println(g.playerNumber + " " + g.message);
-
             message = clientInputGetter.next();
             this.g.message = message;
             os = sendingSocket.getOutputStream();
@@ -67,26 +64,28 @@ public class Client {
         BufferedInputStream bis;
         ObjectInputStream ois;
         boolean listening = true;
+        while(listening){
         ServerSocket clientListening = new ServerSocket(this.ID);
         receivingSocket = clientListening.accept();
         is = receivingSocket.getInputStream();
         bis = new BufferedInputStream(is);
         ois = new ObjectInputStream(bis);
-        while(listening){
             try {
                 Gamestate temp = (Gamestate) ois.readObject();
                 if(temp.playerNumber == ID) {
                     listening = false;
                     this.g = temp;
+                }else{
+                    System.out.println(temp.playerNumber + ": " + temp.message);
                 }
             } catch (ClassNotFoundException e) {
                 System.out.println("Received incompatible Object Type from Server");
             }
-        }
             ois.close();
             bis.close();
             is.close();
             clientListening.close();
+        }
             System.out.println(g.message);
     }
 
