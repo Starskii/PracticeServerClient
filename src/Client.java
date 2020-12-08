@@ -33,7 +33,22 @@ public class Client {
         Scanner clientInputGetter = new Scanner(System.in);
 
         String message = this.g.message;
+        boolean firstPass = true;
+
+        this.g.message = message;
+        os = sendingSocket.getOutputStream();
+        bos = new BufferedOutputStream(os);
+        oos = new ObjectOutputStream(bos);
+        oos.writeObject(this.g);
+
+        oos.flush();
+
         while(!message.equals("exit")){
+            //Get gamestate back from server
+            receiveData();
+            System.out.println(g.playerNumber + " " + g.message);
+
+            message = clientInputGetter.next();
             this.g.message = message;
             os = sendingSocket.getOutputStream();
             bos = new BufferedOutputStream(os);
@@ -42,11 +57,6 @@ public class Client {
 
             oos.flush();
 
-            //Get gamestate back from server
-            receiveData();
-            if(g.playerNumber == this.ID) {
-                message = clientInputGetter.next();
-            }
         }
         sendingSocket.close();
     }
@@ -57,24 +67,27 @@ public class Client {
         BufferedInputStream bis;
         ObjectInputStream ois;
         boolean listening = true;
+        ServerSocket clientListening = new ServerSocket(this.ID);
+        receivingSocket = clientListening.accept();
+        is = receivingSocket.getInputStream();
+        bis = new BufferedInputStream(is);
+        ois = new ObjectInputStream(bis);
         while(listening){
-            ServerSocket clientListening = new ServerSocket(this.ID);
-            receivingSocket = clientListening.accept();
-            is = receivingSocket.getInputStream();
-            bis = new BufferedInputStream(is);
-            ois = new ObjectInputStream(bis);
             try {
-                this.g = (Gamestate) ois.readObject();
-                listening = false;
+                Gamestate temp = (Gamestate) ois.readObject();
+                if(temp.playerNumber == ID) {
+                    listening = false;
+                    this.g = temp;
+                }
             } catch (ClassNotFoundException e) {
                 System.out.println("Received incompatible Object Type from Server");
             }
+        }
             ois.close();
             bis.close();
             is.close();
             clientListening.close();
             System.out.println(g.message);
-        }
     }
 
     public static void main(String[] args) throws IOException{

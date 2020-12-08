@@ -2,20 +2,21 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server extends Thread{
     private Socket connectionSocket;
     private static int userCount = 0;
-    private static LinkedList<Integer> userList;
     boolean newUser;
     boolean userConnected;
     int userNumber;
     Gamestate g;
     int currentPlayer;
+    ConcurrentHashMap<Integer, Integer> userList;
 
-    public Server(Socket connectionSocket){
+    public Server(Socket connectionSocket, ConcurrentHashMap<Integer, Integer> userList){
+        this.userList = userList;
         this.connectionSocket = connectionSocket;
-        userList = new LinkedList<>();
         g = new Gamestate(0, "");
         this.newUser = true;
         userConnected = true;
@@ -47,8 +48,9 @@ public class Server extends Thread{
     }
 
     private void updatePlayersGamestate(Gamestate g) throws IOException {
-        for(Integer playerID : userList){
+        for(Integer playerID : userList.values()){
             try {
+                Thread.sleep(10);
                 Socket dataSocket = new Socket(connectionSocket.getInetAddress(), playerID);
                 OutputStream os = dataSocket.getOutputStream();
                 BufferedOutputStream bos = new BufferedOutputStream(os);
@@ -81,7 +83,7 @@ public class Server extends Thread{
         Gamestate g = (Gamestate) ois.readObject();
         updateGameState(g);
         if(!userList.contains(g.playerNumber))
-            userList.add(g.playerNumber);
+            userList.put(g.playerNumber, g.playerNumber);
 
         updatePlayersGamestate(g);
         if(g.message.equals("exit")) {

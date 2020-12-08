@@ -1,8 +1,12 @@
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MultiServer {
+    public static ConcurrentHashMap<Integer, Integer> userList;
     public static void main(String[] args) throws IOException {
+        userList = new ConcurrentHashMap<>();
         ServerSocket serverSocket = null;
         boolean listening = true;
         Server w;
@@ -13,9 +17,8 @@ public class MultiServer {
             System.err.println("Could not listen on port: 4999.");
             System.exit(-1);
         }
-
         while (listening) {
-            w = new Server(serverSocket.accept());
+            w = new Server(serverSocket.accept(), userList);
             Thread t = new Thread(w);
             t.start();
         }
