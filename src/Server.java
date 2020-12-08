@@ -1,10 +1,12 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 
 public class Server extends Thread{
     private Socket connectionSocket;
     private static int userCount = 0;
+    private static LinkedList<Integer> userList;
     boolean newUser;
     boolean userConnected;
     int userNumber;
@@ -12,6 +14,7 @@ public class Server extends Thread{
 
     public Server(Socket connectionSocket){
         this.connectionSocket = connectionSocket;
+        userList = new LinkedList<>();
         this.newUser = true;
         userConnected = true;
     }
@@ -44,14 +47,14 @@ public class Server extends Thread{
         InputStream is = connectionSocket.getInputStream();
         BufferedInputStream bis = new BufferedInputStream(is);
         ObjectInputStream ois;
-        try {
-            ois = new ObjectInputStream(bis);
-        }catch(EOFException e){
+        ois = new ObjectInputStream(bis);
+        Gamestate g = (Gamestate) ois.readObject();
+        if(!userList.contains(g.playerNumber))
+            userList.add(g.playerNumber);
+        if(g.message.equals("exit")) {
+            userList.remove(g.playerNumber);
             return 1;
         }
-        Gamestate g = (Gamestate) ois.readObject();
-        if(g.message.equals("exit"))
-            return 1;
         System.out.println(g.playerNumber + ": " + g.message);
         return 0;
      }
