@@ -4,10 +4,11 @@ import java.net.Socket;
 
 public class Server extends Thread{
     private Socket connectionSocket;
-    int port;
     private static int userCount = 0;
     boolean newUser;
     boolean userConnected;
+    int userNumber;
+    int port;
 
     public Server(Socket connectionSocket){
         this.connectionSocket = connectionSocket;
@@ -19,13 +20,16 @@ public class Server extends Thread{
         while(this.userConnected) {
             if (newUser) {
                 userCount++;
-                System.out.println("User " + userCount + " has joined.");
+                this.userNumber = userCount;
+                System.out.println("User " + this.userNumber + " has joined.");
                 newUser = false;
             }
             try {
                 if(userConnected) {
                     if (processRequest() != 0) {
                         this.userConnected = false;
+                        System.out.println("User " + this.userNumber + " has left.");
+                        userCount--;
                     }
                 }
             } catch (IOException e) {
