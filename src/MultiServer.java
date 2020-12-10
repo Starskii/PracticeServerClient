@@ -1,10 +1,11 @@
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public class MultiServer {
     public static ConcurrentHashMap<Integer, Integer> userList;
+
     public static void main(String[] args) throws IOException {
         userList = new ConcurrentHashMap<>();
         ServerSocket serverSocket = null;

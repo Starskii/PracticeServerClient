@@ -1,10 +1,8 @@
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public class Server extends Thread{
     private Socket connectionSocket;
@@ -13,14 +11,14 @@ public class Server extends Thread{
     boolean newUser;
     boolean userConnected;
     int userNumber;
-    Gamestate g;
+    Object g;
     int currentPlayer;
     ConcurrentHashMap<Integer, Integer> userList;
 
     public Server(Socket connectionSocket, ConcurrentHashMap<Integer, Integer> userList){
         this.userList = userList;
         this.connectionSocket = connectionSocket;
-        g = new Gamestate(0, "");
+        g = new Object();
         this.newUser = true;
         userConnected = true;
         currentPlayer = 0;
@@ -50,7 +48,7 @@ public class Server extends Thread{
         }
     }
 
-    private void updatePlayersGamestate(Gamestate g) throws IOException {
+    private void updatePlayersGamestate(Object g) throws IOException {
         for(Integer playerID : userList.values()){
             try {
                 Thread.sleep(10);
@@ -64,19 +62,19 @@ public class Server extends Thread{
                 os.close();
                 dataSocket.close();
             }catch(Exception e){
-                System.out.println("Player " + playerID + " not listening to server.");
+                System.out.println("Core.Player " + playerID + " not listening to server.");
             }
         }
     }
 
-    private void updateGameState(Gamestate g){
+    private void updateGameState(Object g){
         if(userList.size() <= 3){
-            this.g = new Gamestate(0, g.message);
+            this.g = new Object();
         }else{
             if(currentTurn >= 4)
                 currentTurn = 0;
             currentPlayer = userList.get(currentTurn);
-            this.g = new Gamestate(currentPlayer, g.message);
+            this.g = new Object();
         }
     }
 
@@ -85,22 +83,26 @@ public class Server extends Thread{
         BufferedInputStream bis = new BufferedInputStream(is);
         ObjectInputStream ois;
         ois = new ObjectInputStream(bis);
-        Gamestate g = (Gamestate) ois.readObject();
-        if(!userList.values().contains(g.playerNumber))
-            userList.put(userList.size(), g.playerNumber);
+        String message = (String) ois.readObject();
+        String gameState[] = message.split(":");
+        String ID = gameState[0];
+        System.out.println("Player: " + ID + " sent gamestate: ");
+        for(int i = 1; i < gameState.length; i++){
+            String countryInfo[] = gameState[i].split(" ");
+            System.out.println("Country " + countryInfo[0] + " owned by player " + countryInfo[1] + " has " + countryInfo[2] + " armies.");
+        }
+        System.out.println(message);
+//        if(!userList.values().contains(activePlayerID))
+//            userList.put(userList.size(), activePlayerID);
         if(userList.size() == 4)
             incrementTurn();
         updateGameState(g);
         updatePlayersGamestate(this.g);
-        if(g.message.equals("exit")) {
-            userList.remove(g.playerNumber);
-            return 1;
-        }
-        System.out.println(g.playerNumber + ": " + g.message);
+//        System.out.println(activePlayerID + ": has updated the gamestate");
         return 0;
-     }
+    }
 
-     private synchronized void incrementTurn(){
+    private synchronized void incrementTurn(){
         currentTurn++;
-     }
+    }
 }
