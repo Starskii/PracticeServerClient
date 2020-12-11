@@ -50,6 +50,7 @@ public class Server extends Thread{
 
     private void updatePlayersGamestate(Object g) throws IOException {
         for(Integer playerID : userList.values()){
+
             try {
                 Thread.sleep(10);
                 Socket dataSocket = new Socket(connectionSocket.getInetAddress(), playerID);
@@ -62,7 +63,7 @@ public class Server extends Thread{
                 os.close();
                 dataSocket.close();
             }catch(Exception e){
-                System.out.println("Core.Player " + playerID + " not listening to server.");
+                System.out.println("Player " + playerID + " not listening to server.");
             }
         }
     }
@@ -92,8 +93,9 @@ public class Server extends Thread{
             System.out.println("Country " + countryInfo[0] + " owned by player " + countryInfo[1] + " has " + countryInfo[2] + " armies.");
         }
         System.out.println(message);
-//        if(!userList.values().contains(activePlayerID))
-//            userList.put(userList.size(), activePlayerID);
+        int activePlayerID = Integer.parseInt(ID);
+        if(!userList.values().contains(activePlayerID))
+            userList.put(userList.size(), activePlayerID);
         if(userList.size() == 4)
             incrementTurn();
         updateGameState(g);
